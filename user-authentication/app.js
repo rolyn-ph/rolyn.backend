@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth');
+const profileRoutes = require('./routes/profile');
 
 // Loads information from .env (keeps sensitive information outside the codebase)
 dotenv.config();
@@ -16,8 +17,9 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
-// This line sets up the routes for handling authentication related requests, they will be prefixed with '/api/auth'
+// This line sets up the routes for handling authentication related requests, they will be prefixed with '/api/auth' (same for profile routes)
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Sets the PORT at which the server will be listening for incoming requests
 const PORT = process.env.PORT || 5001;

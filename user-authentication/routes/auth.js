@@ -1,12 +1,12 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const express = require('express'); // web framework for node.js used to create routes
+const bcrypt = require('bcryptjs'); // library for hashing passwords
+const jwt = require('jsonwebtoken'); // JSON = java script object notation
+const User = require('../models/User'); // User model that we will be interacting with
 
 const router = express.Router();
 
-// Register Route
-router.post('/register', async (req, res) => {
+// Register Route - handles new user registration
+router.post('/register', async (req, res) => { // listens to 'POST' requests to submit new user data
   const { username, email, password, role } = req.body;
   
   try {
@@ -30,7 +30,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login Route
+// Login Route - handles user login and JWT generation
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
