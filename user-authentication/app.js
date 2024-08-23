@@ -2,7 +2,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const authRoutes = require('./routes/auth');
+// const authRoutes = require('./routes/auth');
+const { router: authRoutes } = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 
 // Loads information from .env (keeps sensitive information outside the codebase)

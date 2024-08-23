@@ -78,7 +78,7 @@ function verifyToken(req, res, next) {
   }
 }
 
-module.exports = router;
+module.exports = {router, verifyToken};
 
 router.get('/test-db', async (req, res) => {
     try {

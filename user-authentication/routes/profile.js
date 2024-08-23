@@ -1,21 +1,23 @@
 const express = require('express');
-const verifyToken = require('./auth');
+// const verifyToken = require('./auth');
+const auth = require('./auth');
 const User = require('../models/User');
 
 const router = express.Router();
 
 // Get Profile
-router.get('/me', verifyToken, async (req, res) => {
+router.get('/me', auth.verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
     res.json(user);
   } catch (error) {
+    console.error(error);
     res.status(500).send('Server error');
   }
 });
 
 // Update Profile
-router.put('/me', verifyToken, async (req, res) => {
+router.put('/me', auth.verifyToken, async (req, res) => {
   const { name, phone, address, skills, experience, education, availability, companyName, jobCategories, companyDescription } = req.body;
 
   try {
@@ -44,6 +46,7 @@ router.put('/me', verifyToken, async (req, res) => {
     await user.save();
     res.json(user);
   } catch (error) {
+    console.error(error);
     res.status(500).send('Server error');
   }
 });
