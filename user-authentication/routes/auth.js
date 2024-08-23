@@ -26,6 +26,7 @@ router.post('/register', async (req, res) => { // listens to 'POST' requests to 
     // Return success message
     res.status(201).json({ msg: 'User registered successfully' });
   } catch (error) {
+    console.error(error); // Log the error details
     res.status(500).send('Server error');
   }
 });
@@ -78,3 +79,13 @@ function verifyToken(req, res, next) {
 }
 
 module.exports = router;
+
+router.get('/test-db', async (req, res) => {
+    try {
+      const users = await User.find(); // Fetch all users as a test
+      res.json(users);
+    } catch (error) {
+      console.error('Database connection error:', error);
+      res.status(500).send('Database connection error');
+    }
+  });
