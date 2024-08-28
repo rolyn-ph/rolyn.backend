@@ -59,7 +59,7 @@ router.post('/login', async (req, res) => {
 
 // Protected Route Example
 router.get('/protected', verifyToken, (req, res) => {
-  res.send('This is a protected route');
+  res.send('You have gained access to a protected route!');
 });
 
 // Middleware to verify JWT
