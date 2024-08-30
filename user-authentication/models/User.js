@@ -39,6 +39,44 @@ const { createClient } = require('@supabase/supabase-js');
 // Initialize the Supabase client
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+// New createUser function
+async function createUser(userData) {
+    const { username, email, password, role } = userData;
+
+    // Check if the user already exists
+    const { data: existingUser, error: selectError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+    if (selectError && selectError.code !== 'PGRST116') { // 'PGRST116' might be the code for "no rows found" or similar in Supabase
+        throw new Error('Error checking for existing user');
+    }
+
+    if (existingUser) {
+        throw new Error('User already exists');
+    }
+
+    // Insert new user if none exists
+    const { data, error } = await supabase
+        .from('users')
+        .insert([
+            {
+                username,
+                email,
+                password,
+                role,
+            }
+        ]);
+
+    if (error) throw error;
+
+    return data;
+}
+
+// Original createUser function
+/*
 async function createUser(userData) {
     const { data, error } = await supabase
         .from('users')
@@ -65,6 +103,7 @@ async function createUser(userData) {
     if (error) throw error;
     return data;
 }
+*/
 
 async function getUserByEmail(email) {
     const { data, error } = await supabase
