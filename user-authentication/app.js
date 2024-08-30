@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
 const express = require('express');
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
-const { router: authRoutes } = require('./routes/auth');
+// const { router: authRoutes } = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 
 // Loads information from .env (keeps sensitive information outside the codebase)

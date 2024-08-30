@@ -32,15 +32,57 @@ const userSchema = new mongoose.Schema({
 module.exports = mongoose.model('User', userSchema);
 */
 
-const createUser = async (client, user) => {
-    const { username, email, password, role } = user;
-    const query = `
-      INSERT INTO users (username, email, password, role)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *;
-    `;
-    const values = [username, email, password, role];
-    const res = await client.query(query, values);
-    return res.rows[0];
-  };
+// PostgreSQL Logic
+
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize the Supabase client
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+async function createUser(userData) {
+    const { data, error } = await supabase
+        .from('users')
+        .insert([
+            {
+                username: userData.username,
+                email: userData.email,
+                password: userData.password,
+                role: userData.role,
+                name: userData.name,
+                phone: userData.phone,
+                address: userData.address,
+                profile_picture: userData.profilePicture,
+                skills: userData.skills,
+                experience: userData.experience,
+                education: userData.education,
+                availability: userData.availability,
+                company_name: userData.companyName,
+                job_categories: userData.jobCategories,
+                company_description: userData.companyDescription
+            }
+        ]);
+
+    if (error) throw error;
+    return data;
+}
+
+async function getUserByEmail(email) {
+    const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+    if (error) throw error;
+    return data;
+}
+
+// Other user-related functions...
+
+module.exports = {
+    createUser,
+    getUserByEmail,
+    // Add other functions as needed
+};
+
   
