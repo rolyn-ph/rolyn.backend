@@ -1,3 +1,4 @@
+/*
 // This file helps us to represent, structure and store user data in the database
 // mongoose is an object data modelling library
 const mongoose = require('mongoose');
@@ -29,3 +30,17 @@ const userSchema = new mongoose.Schema({
 
 // Creates a 'User' model that allows you to interact with the data
 module.exports = mongoose.model('User', userSchema);
+*/
+
+const createUser = async (client, user) => {
+    const { username, email, password, role } = user;
+    const query = `
+      INSERT INTO users (username, email, password, role)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *;
+    `;
+    const values = [username, email, password, role];
+    const res = await client.query(query, values);
+    return res.rows[0];
+  };
+  
