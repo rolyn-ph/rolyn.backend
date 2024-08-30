@@ -9,7 +9,10 @@ jest.mock('@supabase/supabase-js', () => {
             select: jest.fn().mockReturnThis(),
             insert: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockReturnThis(),
+            single: jest.fn().mockImplementation(() => ({
+                data: null,
+                error: null,
+            })),
         }),
     };
 });
@@ -17,17 +20,20 @@ jest.mock('@supabase/supabase-js', () => {
 const { createUser, getUserByEmail } = require('../models/User');
 
 describe('User module', () => {
-
     let supabase;
 
     beforeEach(() => {
         supabase = require('@supabase/supabase-js').createClient();
+
+        // Reset mock implementations before each test
+        supabase.from().select().eq().single.mockReset();
+        supabase.insert.mockReset();
     });
 
     describe('createUser', () => {
         it('should throw an error if the user already exists', async () => {
             // Mock Supabase to return an existing user
-            supabase.single.mockResolvedValueOnce({
+            supabase.from().select().eq().single.mockResolvedValueOnce({
                 data: { id: 1 },
                 error: null,
             });
@@ -37,14 +43,14 @@ describe('User module', () => {
 
         it('should create a new user if no existing user is found', async () => {
             // Mock Supabase to indicate no user exists
-            supabase.single.mockResolvedValueOnce({
+            supabase.from().select().eq().single.mockResolvedValueOnce({
                 data: null,
                 error: { code: 'PGRST116' },
             });
 
             // Mock the insert function
             const mockInsertResponse = { id: 1, username: 'testuser' };
-            supabase.insert.mockResolvedValueOnce({
+            supabase.from().insert.mockResolvedValueOnce({
                 data: [mockInsertResponse],
                 error: null,
             });
@@ -61,7 +67,7 @@ describe('User module', () => {
 
         it('should throw an error if there is an issue during user check', async () => {
             // Mock Supabase to return an error during user check
-            supabase.single.mockResolvedValueOnce({
+            supabase.from().select().eq().single.mockResolvedValueOnce({
                 data: null,
                 error: { code: 'PGRST100' },
             });
@@ -74,7 +80,7 @@ describe('User module', () => {
         it('should return a user by email', async () => {
             // Mock Supabase to return a user
             const mockUser = { id: 1, email: 'test@example.com', username: 'testuser' };
-            supabase.single.mockResolvedValueOnce({
+            supabase.from().select().eq().single.mockResolvedValueOnce({
                 data: mockUser,
                 error: null,
             });
@@ -85,7 +91,7 @@ describe('User module', () => {
 
         it('should throw an error if user is not found', async () => {
             // Mock Supabase to return an error
-            supabase.single.mockResolvedValueOnce({
+            supabase.from().select().eq().single.mockResolvedValueOnce({
                 data: null,
                 error: { message: 'User not found' },
             });
@@ -94,6 +100,8 @@ describe('User module', () => {
         });
     });
 });
+
+
 
 
 /*

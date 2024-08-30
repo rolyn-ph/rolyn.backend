@@ -36,44 +36,95 @@ module.exports = mongoose.model('User', userSchema);
 
 const { createClient } = require('@supabase/supabase-js');
 
-// Initialize the Supabase client
+// Initialize the Supabase client with the URL and key from the environment variables
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// New createUser function
 async function createUser(userData) {
+    // Destructure the user data object to extract the necessary fields
     const { username, email, password, role } = userData;
 
-    // Check if the user already exists
-    const { data: existingUser, error: selectError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', email)
-        .single();
+    try {
+        // Step 1: Check if the user already exists in the database by querying the 'users' table
+        const { data: existingUser, error: selectError } = await supabase
+            .from('users')       // Select from the 'users' table
+            .select('id')        // Only select the 'id' column
+            .eq('email', email)  // Filter where the email matches the provided email
+            .single();           // Expect a single result
 
-    if (selectError && selectError.code !== 'PGRST116') { // 'PGRST116' might be the code for "no rows found" or similar in Supabase
-        throw new Error('Error checking for existing user');
-    }
-
-    if (existingUser) {
-        throw new Error('User already exists');
-    }
-
-    // Insert new user if none exists
-    const { data, error } = await supabase
-        .from('users')
-        .insert([
-            {
-                username,
-                email,
-                password,
-                role,
+        // Step 2: Handle any errors during the selection process
+        if (selectError) {
+            console.error('Error during user check:', selectError); // Log the error for debugging
+            // If the error code is not 'PGRST116' (which we assume means "no rows found"), throw an error
+            if (selectError.code !== 'PGRST116') {
+                throw new Error('Error checking for existing user');
             }
-        ]);
+        }
 
-    if (error) throw error;
+        // Step 3: If an existing user is found, throw an error indicating the user already exists
+        if (existingUser) {
+            throw new Error('User already exists');
+        }
 
-    return data;
+        // Step 4: If no user exists, insert the new user into the 'users' table
+        const { data, error } = await supabase
+            .from('users')       // Insert into the 'users' table
+            .insert([
+                {
+                    username,     // Insert the username
+                    email,        // Insert the email
+                    password,     // Insert the password
+                    role,         // Insert the role (e.g., worker or employer)
+                }
+            ]);
+
+        // Step 5: Handle any errors during the insertion process
+        if (error) {
+            console.error('Error creating user:', error); // Log the error for debugging
+            throw new Error('Error creating user');       // Throw a general error for the user creation failure
+        }
+
+        // Step 6: Return the data of the newly created user
+        return data;
+
+    } catch (err) {
+        // Catch any errors that occur in the try block, log them, and re-throw them
+        console.error('Error in createUser:', err);
+        throw err;
+    }
 }
+
+async function getUserByEmail(email) {
+    try {
+        // Step 1: Query the 'users' table to find a user with the matching email
+        const { data, error } = await supabase
+            .from('users')       // Select from the 'users' table
+            .select('*')         // Select all columns
+            .eq('email', email)  // Filter where the email matches the provided email
+            .single();           // Expect a single result
+
+        // Step 2: Handle any errors that occur during the selection process
+        if (error) {
+            console.error('Error retrieving user by email:', error); // Log the error for debugging
+            throw new Error('User not found');                       // Throw an error indicating the user was not found
+        }
+
+        // Step 3: Return the data of the found user
+        return data;
+
+    } catch (err) {
+        // Catch any errors that occur in the try block, log them, and re-throw them
+        console.error('Error in getUserByEmail:', err);
+        throw err;
+    }
+}
+
+// Export the functions so they can be used in other parts of the application
+module.exports = {
+    createUser,
+    getUserByEmail,
+};
+
+
 
 // Original createUser function
 /*
@@ -104,24 +155,3 @@ async function createUser(userData) {
     return data;
 }
 */
-
-async function getUserByEmail(email) {
-    const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-    if (error) throw error;
-    return data;
-}
-
-// Other user-related functions...
-
-module.exports = {
-    createUser,
-    getUserByEmail,
-    // Add other functions as needed
-};
-
-  
