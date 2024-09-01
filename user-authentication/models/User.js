@@ -51,6 +51,9 @@ async function createUser(userData) {
             .eq('email', email)  // Filter where the email matches the provided email
             .single();           // Expect a single result
 
+        console.log('existingUser:', existingUser); // Debugging output
+        console.log('selectError:', selectError); // Debugging output
+
         // Step 2: Handle any errors during the selection process
         if (selectError) {
             console.error('Error during user check:', selectError); // Log the error for debugging
@@ -62,6 +65,7 @@ async function createUser(userData) {
 
         // Step 3: If an existing user is found, throw an error indicating the user already exists
         if (existingUser) {
+            console.error('User already exists:', existingUser);
             throw new Error('User already exists');
         }
 
