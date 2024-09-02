@@ -97,35 +97,9 @@ async function createUser(userData) {
     }
 }
 
-async function getUserByEmail(email) {
-    try {
-        // Step 1: Query the 'users' table to find a user with the matching email
-        const { data, error } = await supabase
-            .from('users')       // Select from the 'users' table
-            .select('*')         // Select all columns
-            .eq('email', email)  // Filter where the email matches the provided email
-            .single();           // Expect a single result
-
-        // Step 2: Handle any errors that occur during the selection process
-        if (error) {
-            console.error('Error retrieving user by email:', error); // Log the error for debugging
-            throw new Error('User not found');                       // Throw an error indicating the user was not found
-        }
-
-        // Step 3: Return the data of the found user
-        return data;
-
-    } catch (err) {
-        // Catch any errors that occur in the try block, log them, and re-throw them
-        console.error('Error in getUserByEmail:', err);
-        throw err;
-    }
-}
-
 // Export the functions so they can be used in other parts of the application
 module.exports = {
-    createUser,
-    getUserByEmail,
+    createUser
 };
 
 

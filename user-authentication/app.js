@@ -37,8 +37,9 @@ app.get('/', (req, res) => {
 const express = require('express');
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
-// const { router: authRoutes } = require('./routes/auth');
+const { router: authRoutes } = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
+const userRoutes = require('./routes/users');
 
 // Loads information from .env (keeps sensitive information outside the codebase)
 dotenv.config();
@@ -61,6 +62,7 @@ app.use((req, res, next) => {
 // This line sets up the routes for handling authentication related requests, they will be prefixed with '/api/auth' (same for profile routes)
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/users', userRoutes);
 
 // Sets the PORT at which the server will be listening for incoming requests
 const PORT = process.env.PORT || 5001;
