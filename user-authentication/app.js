@@ -34,6 +34,7 @@ app.get('/', (req, res) => {
 */
 
 // Required modules
+require('dotenv').config();
 const express = require('express');
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
