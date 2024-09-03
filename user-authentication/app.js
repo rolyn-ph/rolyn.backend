@@ -36,6 +36,7 @@ app.get('/', (req, res) => {
 // Required modules
 require('dotenv').config();
 const express = require('express');
+const { auth, requiresAuth } = require('express-openid-connect');
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
 const { router: authRoutes } = require('./routes/auth');
@@ -49,6 +50,16 @@ dotenv.config();
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Configurations for auth0
+const config = {
+    authRequired: false,
+    auth0Logout: true,
+    secret: process.env.AUTH0_SECRET,
+    baseURL: 'http://localhost:5001',
+    clientID: 'QEk1tCuSrJUeIArnnoCDi0FoygYcffgi',
+    issuerBaseURL: 'https://dev-6wrusbfmjzjbuzuj.us.auth0.com'
+  };
 
 // Initialises express application and parses JSON requests
 const app = express();
@@ -64,6 +75,18 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/users', userRoutes);
+
+// Attach Auth0 authentication routes to your app, auth router attaches /login, /logout, and /callback routes to the baseURL
+app.use(auth(config));
+
+// req.isAuthenticated is provided from the auth router
+app.get('/', (req, res) => {
+    res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+  });
+
+app.get('/profile', requiresAuth(), (req, res) => {
+    res.send(JSON.stringify(req.oidc.user));
+});
 
 // Sets the PORT at which the server will be listening for incoming requests
 const PORT = process.env.PORT || 5001;
