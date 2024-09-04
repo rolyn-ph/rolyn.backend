@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const { auth, requiresAuth } = require('express-openid-connect');
-const { expressjwt: expressJwt } = require('express-jwt'); // Middleware to validate Auth0 JWT
+const { checkJwt } = require('./middleware/authMiddleware'); // Middleware to validate Auth0 JWT
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
 const { router: authRoutes } = require('./routes/auth');
@@ -21,7 +21,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const config = {
     authRequired: false,
     auth0Logout: true,
-    secret: process.env.AUTH0_SECRET,
+    secret: process.env.AUTH0_CLIENT_SECRET,
     baseURL: 'http://localhost:5001',
     clientID: 'QEk1tCuSrJUeIArnnoCDi0FoygYcffgi',
     issuerBaseURL: 'https://dev-6wrusbfmjzjbuzuj.us.auth0.com'
@@ -45,18 +45,10 @@ app.use('/api/users', userRoutes);
 // Attach Auth0 authentication routes to your app, auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
 
-// Middleware to check for valid JWT token for protected routes
-const checkJwt = expressJwt({
-    secret: 'me4CclP-_zO9hRO54u9pFAk5JWeErR1gDDWCo8YIT_jaB-tq0esEmYLWqxxrGnrS', // Secret from Auth0
-    audience: 'https://dev-6wrusbfmjzjbuzuj.us.auth0.com/api/v2/', // The audience (API identifier) in Auth0
-    issuer: 'dev-6wrusbfmjzjbuzuj.us.auth0.com', // Your Auth0 domain
-    algorithms: ['RS256'], // Use RS256 algorithm
-});
-
 // Protect API routes
 app.use('/api', checkJwt, (req, res, next) => {
     next();
-  });
+});
 
 // req.isAuthenticated is provided from the auth router
 app.get('/', (req, res) => {
