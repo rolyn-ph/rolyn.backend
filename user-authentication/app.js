@@ -2,12 +2,14 @@
 require('dotenv').config();
 const express = require('express');
 const { auth, requiresAuth } = require('express-openid-connect');
-const { checkJwt } = require('./middleware/authMiddleware'); // Middleware to validate Auth0 JWT
+const { jwtCheck } = require('./middleware/authMiddleware'); // Import the middleware
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
 const { router: authRoutes } = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const userRoutes = require('./routes/users');
+
+// const { checkJwt } = require('./middleware/authMiddleware'); // old middleware to validate Auth0 JWT
 
 // Loads information from .env (keeps sensitive information outside the codebase)
 dotenv.config();
@@ -24,7 +26,7 @@ const config = {
     secret: process.env.AUTH0_CLIENT_SECRET,
     baseURL: 'http://localhost:5001',
     clientID: 'QEk1tCuSrJUeIArnnoCDi0FoygYcffgi',
-    issuerBaseURL: 'https://dev-6wrusbfmjzjbuzuj.us.auth0.com'
+    issuerBaseURL: process.env.AUTH0_ISSUER_BASE
   };
 
 // Initialises express application and parses JSON requests
@@ -45,10 +47,18 @@ app.use('/api/users', userRoutes);
 // Attach Auth0 authentication routes to your app, auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
 
-// Protect API routes
-app.use('/api', checkJwt, (req, res, next) => {
-    next();
-});
+// Apply jwtCheck middleware to protect all routes under /api
+app.use('/api', jwtCheck);
+
+// Example protected route
+app.get('/authorized', (req, res) => {
+    res.send('Secured Resource');
+  });
+
+// Protect API routes (old using checkJwt)
+// app.use('/api', checkJwt, (req, res, next) => {
+//     next();
+// });
 
 // req.isAuthenticated is provided from the auth router
 app.get('/', (req, res) => {

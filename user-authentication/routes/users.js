@@ -1,6 +1,6 @@
 const express = require('express');
 const { checkJwt } = require('../middleware/authMiddleware'); // Assuming you have the JWT middleware configured
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 const router = express.Router();
 
 // Controller function to handle retrieving a user by email
@@ -13,6 +13,9 @@ router.get('/:email', getUserByEmail);
 router.get('/user-data', checkJwt, async (req, res) => {
     try {
       const token = req.user; // This should contain the validated user information from Auth0
+
+      // Dynamically import node-fetch
+      const fetch = (await import('node-fetch')).default;
   
       // Fetch data from Supabase using the token for authorization
       const response = await fetch('https://YOUR_SUPABASE_URL/rest/v1/your_table', {
