@@ -6,6 +6,44 @@ const router = express.Router();
 // Controller function to handle retrieving a user by email
 const { getUserByEmail } = require('../controllers/userController');
 
+router.patch('/update-profile', jwtCheck, async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decodedToken = jwt.decode(token);
+        const auth0_id = decodedToken.sub;  // Use sub as the auth0_id
+
+        // Now you can use auth0_id in your update logic
+        console.log('Manual sub (auth0_id):', auth0_id);
+
+        // Extract the updated user details from the request body
+        const { name, phone, address, skills, experience, availability } = req.body;
+        const { supabase } = req;
+
+        // Perform the update in Supabase
+        const { data, error } = await supabase
+            .from('users')
+            .update({
+                name,
+                phone,
+                address,
+                skills,
+                experience,
+                availability,
+            })
+            .eq('auth0_id', auth0_id);
+
+        if (error) {
+            console.error('Error updating profile:', error);
+            return res.status(500).json({ message: 'Failed to update profile' });
+        }
+
+        return res.status(200).send({ message: 'Profile updated successfully', data });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        return res.status(500).send({ message: 'Failed to update profile' });
+    }
+});
+
 // Define the route to fetch user data from Supabase
 router.get('/user-data', jwtCheck, async (req, res) => {
     try {
@@ -58,7 +96,6 @@ router.get('/user-data', jwtCheck, async (req, res) => {
     }
 });
 
-// Define the route to retrieve a user by email
-router.get('/:email', getUserByEmail);
+
 
 module.exports = router;

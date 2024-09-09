@@ -41,18 +41,25 @@ app.use('/api', (req, res, next) => {
     console.log('API request received');  // Log before invoking jwtCheck
     next();
 });
+app.use('/api', (req, res, next) => {
+    console.log('Authorization header:', req.headers.authorization);  // Log the authorization header
+    next();
+});
 app.use('/api', jwtCheck, (req, res, next) => {
     console.log('JWT check passed');  // Log when JWT check passes
+    console.log('Decoded JWT in jwtCheck:', req.user);  // Check if req.user is defined and has the sub field
     next();
 });
 
+app.use('/api/users', jwtCheck, userRoutes);  // Ensure jwtCheck is applied here
+
 // Apply jwtCheck middleware to protect all routes under /api
-app.use('/api', jwtCheck);
+// app.use('/api', jwtCheck);
 
 // This line sets up the routes for handling authentication related requests, they will be prefixed with '/api/auth' (same for profile routes)
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/users', userRoutes);
+// app.use('/api/users', userRoutes);
 
 // Attach Auth0 authentication routes to your app, auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
