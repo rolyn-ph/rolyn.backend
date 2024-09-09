@@ -1,42 +1,64 @@
 const express = require('express');
-const { checkJwt } = require('../middleware/authMiddleware'); // Assuming you have the JWT middleware configured
-// const fetch = require('node-fetch');
+const jwt = require('jsonwebtoken');
+const { jwtCheck } = require('../middleware/authMiddleware'); // Assuming you have the JWT middleware configured
 const router = express.Router();
 
 // Controller function to handle retrieving a user by email
 const { getUserByEmail } = require('../controllers/userController');
 
+// Define the route to fetch user data from Supabase
+router.get('/user-data', jwtCheck, async (req, res) => {
+    try {
+        console.log('Request received at /user-data');
+
+        // Extract JWT from the authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            throw new Error('Authorization header is missing');
+        }
+
+        console.log('Authorization header:', authHeader);
+
+        const token = authHeader.split(' ')[1];
+        console.log('Token:', token);  // Log the extracted token
+
+        // Make a request to Auth0's userinfo endpoint to get the user's email
+        const userInfoResponse = await fetch('https://dev-6wrusbfmjzjbuzuj.us.auth0.com/userinfo', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const userInfo = await userInfoResponse.json();
+        console.log('User Info:', userInfo);
+
+        const email = userInfo.email;
+        console.log('Email from userInfo:', email);
+
+        // Error if email is missing
+        if (!email) {
+            throw new Error('Email not found in token or user info');
+        }
+
+        // Fetch the user by email using the getUserByEmail function
+        const user = await getUserByEmail(email);  // Calling the function
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Return the user data if found
+        return res.status(200).json(user);
+
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        res.status(500).send({ error: 'Failed to fetch user data' });
+    }
+});
+
 // Define the route to retrieve a user by email
 router.get('/:email', getUserByEmail);
-
-// Define the route to fetch user data from Supabase
-router.get('/user-data', checkJwt, async (req, res) => {
-    try {
-      const token = req.user; // This should contain the validated user information from Auth0
-
-      // Dynamically import node-fetch
-      const fetch = (await import('node-fetch')).default;
-  
-      // Fetch data from Supabase using the token for authorization
-      const response = await fetch('https://YOUR_SUPABASE_URL/rest/v1/your_table', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`, // Ensure the Auth0 token is passed here
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      // Check for errors in the response
-      if (!response.ok) {
-        throw new Error(`Error fetching data: ${response.statusText}`);
-      }
-  
-      const data = await response.json();
-      res.status(200).send(data);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      res.status(500).send({ error: 'Failed to fetch user data' });
-    }
-  });
 
 module.exports = router;

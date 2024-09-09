@@ -9,8 +9,6 @@ const { router: authRoutes } = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const userRoutes = require('./routes/users');
 
-// const { checkJwt } = require('./middleware/authMiddleware'); // old middleware to validate Auth0 JWT
-
 // Loads information from .env (keeps sensitive information outside the codebase)
 dotenv.config();
 
@@ -35,9 +33,21 @@ app.use(express.json());
 
 // Pass Supabase client to routes
 app.use((req, res, next) => {
-  req.supabase = supabase;
-  next();
+    req.supabase = supabase;
+    next();
 });
+
+app.use('/api', (req, res, next) => {
+    console.log('API request received');  // Log before invoking jwtCheck
+    next();
+});
+app.use('/api', jwtCheck, (req, res, next) => {
+    console.log('JWT check passed');  // Log when JWT check passes
+    next();
+});
+
+// Apply jwtCheck middleware to protect all routes under /api
+app.use('/api', jwtCheck);
 
 // This line sets up the routes for handling authentication related requests, they will be prefixed with '/api/auth' (same for profile routes)
 app.use('/api/auth', authRoutes);
@@ -47,18 +57,10 @@ app.use('/api/users', userRoutes);
 // Attach Auth0 authentication routes to your app, auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
 
-// Apply jwtCheck middleware to protect all routes under /api
-app.use('/api', jwtCheck);
-
 // Example protected route
-app.get('/authorized', (req, res) => {
-    res.send('Secured Resource');
-  });
-
-// Protect API routes (old using checkJwt)
-// app.use('/api', checkJwt, (req, res, next) => {
-//     next();
-// });
+app.get('/api/authorized', jwtCheck, (req, res) => {
+    res.send('You are authorized');
+});
 
 // req.isAuthenticated is provided from the auth router
 app.get('/', (req, res) => {
